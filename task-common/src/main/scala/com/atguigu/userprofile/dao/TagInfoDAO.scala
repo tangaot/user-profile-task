@@ -18,4 +18,12 @@ object TagInfoDAO {
     }
     tagInfo
   }
+
+  def getTagInfoList(): List[TagInfo] ={
+    val tagListSQL="select tg.* from tag_info tg join task_info tk on tg.tag_task_id =tk.id   where tk.task_status='1' and tg.tag_level=3 "
+    val tagList: List[TagInfo] = MySqlUtil.queryList(tagListSQL,classOf[TagInfo],true)
+    tagList
+  }
+
+
 }
