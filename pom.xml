@@ -13,6 +13,7 @@
         <module>task-sql</module>
         <module>task-merge</module>
         <module>task-merge</module>
+        <module>task-merge</module>
     </modules>
     <properties>
         <spark.version>3.0.0</spark.version>
