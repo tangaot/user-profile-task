@@ -26,7 +26,7 @@ object TaskSQLApp {
      //    一堆数   List[UserInfo]  ...           List[task_tag_rule]
 
      //    如何知道要执行的是哪个任务？ 可以通过args 获得 要执行的task_id 和task_date
-     val sparkConf: SparkConf = new SparkConf().setAppName("task_sql_app") //.setMaster("local[*]")
+     val sparkConf: SparkConf = new SparkConf().setAppName("task_sql_app").setMaster("local[*]")
      val sparkSession: SparkSession = SparkSession.builder().config(sparkConf).enableHiveSupport().getOrCreate()
 
      val taskId: String = args(0)
