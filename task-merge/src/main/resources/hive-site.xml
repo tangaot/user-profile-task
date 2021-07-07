@@ -21,7 +21,7 @@
 
     <property>
         <name>javax.jdo.option.ConnectionPassword</name>
-        <value>Flzx3qc!</value>
+        <value>123456</value>
         <description>password to use against metastore database</description>
     </property>
     <property>
