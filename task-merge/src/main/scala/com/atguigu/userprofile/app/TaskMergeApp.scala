@@ -10,7 +10,6 @@ import org.apache.spark.sql.SparkSession
 
 object TaskMergeApp {
 
-
   //1   读取到标签集合的定义 ，提取标签的编码作为   宽表的标签字段
   // 2   每天执行产生一张宽表
   // 3  把多个标签表union成高表 ，在对高表进行行转列 ，变成宽表
@@ -18,8 +17,7 @@ object TaskMergeApp {
   def main(args: Array[String]): Unit = {
 
 
-    val sparkConf: SparkConf = new SparkConf().setAppName("task_merge_app")
-      //.setMaster("local[*]")
+    val sparkConf: SparkConf = new SparkConf().setAppName("task_merge_app").setMaster("local[*]")
     val sparkSession: SparkSession = SparkSession.builder().config(sparkConf).enableHiveSupport().getOrCreate()
 
 
@@ -27,6 +25,7 @@ object TaskMergeApp {
     val taskDate: String = args(1)
 
     //1   读取到标签集合的定义 ，提取标签的编码作为   宽表的标签字段
+
       val tagList: List[TagInfo] = TagInfoDAO.getTagInfoList()
     //2   宽表的定义
     // 为了保证操作的幂等性，每次执行 要把当天的宽表 清除一次
@@ -63,7 +62,6 @@ object TaskMergeApp {
     sparkSession.sql(createTableSql)
 
 
-
     // 3  把多个标签表union成高表 ，在对高表进行行转列 ，变成宽表
     // 3.1 把多个标签表union成高表
     // select  uid, tag_value  from tag1 where dt='$taskDate'
@@ -74,7 +72,6 @@ object TaskMergeApp {
     val tagUnionSQL: String = tagList.map(tagInfo=>  s"select uid,  tag_value , '${tagInfo.tagCode.toLowerCase}' tag_code  from  ${tagInfo.tagCode.toLowerCase} where dt='$taskDate'"   ).mkString(" union all ")
 
     println(tagUnionSQL)
-
 
 
     //3.2  pivot 行转列
