@@ -2,7 +2,9 @@ package com.atguigu.userprofile.ml.pipeline
 
 import org.apache.spark.ml.{Pipeline, PipelineModel, Transformer}
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
-import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler, VectorIndexer}
+import org.apache.spark.ml.feature.{IndexToString, StringIndexer, StringIndexerModel, VectorAssembler, VectorIndexer}
+import org.apache.spark.mllib.evaluation.MulticlassMetrics
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 
 class MyPipeline {
@@ -117,6 +119,10 @@ class MyPipeline {
         .setFeaturesCol("feature_index")
         .setPredictionCol("prediction_col")
         .setImpurity("gini")  // 信息熵   基尼
+              .setMinInfoGain(minInfoGain)
+              .setMaxDepth(maxDepth)
+              .setMaxBins(maxBins)
+              .setMinInstancesPerNode(minInstancesPerNode)
       classifier
    }
 
@@ -146,6 +152,49 @@ class MyPipeline {
       val classificationModel: DecisionTreeClassificationModel = transformer.asInstanceOf[DecisionTreeClassificationModel]
       println(classificationModel.featureImportances)
 
+   }
+
+   // 把预测列 的矢量值转换为原值
+   def convertOrigin(predictedDataFrame:DataFrame): DataFrame ={
+      //找1号助理(练过的)要  label 矢量值与原值的对应关系
+      val transformer: Transformer = pipelineModel.stages(0)
+      val stringIndexerModel: StringIndexerModel = transformer.asInstanceOf[StringIndexerModel]
+
+        // 定义一个转换器
+         val indexToString = new IndexToString()
+      indexToString.setInputCol("prediction_col").setOutputCol("prediction_origin").setLabels(stringIndexerModel.labels)
+        //用转换器转换数据
+      val convertedDataFrame: DataFrame = indexToString.transform(predictedDataFrame)
+
+      convertedDataFrame
+   }
+
+   //  打印评估报告 // 总准确率   //各个选项的 召回率 和精确率
+    def  printEvaluateReport(predictedDataFrame:DataFrame): Unit ={
+       val predictAndLabelRDD: RDD[(Double, Double)] = predictedDataFrame.rdd.map { row =>
+                 val predictValue: Double = row.getAs[Double]("prediction_col")
+                 val labelValue: Double = row.getAs[Double]("label_index")
+                 (predictValue, labelValue)
+
+         }
+       val metrics = new  MulticlassMetrics(predictAndLabelRDD)
+       println(" 总准确率: "+metrics.accuracy)
+       metrics.labels.foreach { label =>
+          println(s" 矢量值为：$label 的  精确率:  ${metrics.precision(label)}")
+          println(s" 矢量值为：$label 的  召回率:  ${metrics.recall(label)}")
+       }
+
+    }
+
+
+   //把生成的模型存储到指定的位置
+   def  saveModel(path:String): Unit ={
+      pipelineModel.write.overwrite().save(path)
+   }
+  // 把已经存储到hdfs模型加载到对象中
+   def loadModel(path:String): MyPipeline ={
+         pipelineModel= PipelineModel.load(path)
+      this
    }
 
 

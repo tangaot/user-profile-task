@@ -37,7 +37,12 @@ object StudGenderTrain {
     // 3 创建 mypipeline
     println("创建 mypipeline..")
         val myPipeline: MyPipeline = new MyPipeline().setLabelColName("gender")
-          .setFeatureColNames(Array("hair","height","skirt","age")).setMaxCategories(5).init()
+          .setFeatureColNames(Array("hair","height","skirt","age"))
+          .setMaxDepth(6)
+          .setMinInfoGain(0.1)
+          .setMaxBins(64)
+          .setMinInstancesPerNode(4)
+          .setMaxCategories(5).init()
 
     //  4  进行训练
     println("进行训练..")
@@ -51,7 +56,21 @@ object StudGenderTrain {
     //  6  打印预测结果
     predictedDataFrame.show(100,false)
 
+    // 7  把矢量预测结果转换为原始值
+    println("进行转换..")
+    val convertedDataFrame: DataFrame = myPipeline.convertOrigin(predictedDataFrame)
+    convertedDataFrame.show(100,false)
 
+
+    // 8  打印评估报告 // 总准确率   //各个选项的 召回率 和精确率
+    myPipeline.printEvaluateReport(convertedDataFrame)
   }
+
+
+
+
+
+
+
 
 }
